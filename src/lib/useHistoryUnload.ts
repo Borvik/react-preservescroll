@@ -8,10 +8,12 @@ type Map = {
 }
 
 function wrapFn<Params extends any[], R>(
+  historyFuntion: HistoryKeys,
   before: () => void,
   func: (...args: Params) => R
 ): (...args: Params) => R {
   return (...args: Params) => {
+    console.log(`Running history.${historyFuntion}():`, args);
     before();
     return func(...args);
   }
@@ -21,6 +23,7 @@ export function useHistoryUnload(cb: Function) {
   useEffect(() => {
     let origMap: Map = {};
     function handleBeforeUnload(_evt: BeforeUnloadEvent) {
+      console.log('Running beforeunload');
       cb();
     }
 
@@ -31,7 +34,7 @@ export function useHistoryUnload(cb: Function) {
           // @ts-ignore
           origMap[k] = window.history[k];
           // @ts-ignore
-          window.history[k] = wrapFn(cb, origMap[k])
+          window.history[k] = wrapFn(k, cb, origMap[k])
         }
       }
     }

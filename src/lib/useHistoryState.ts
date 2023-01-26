@@ -31,6 +31,7 @@ const setHistoryState = debounce(function setHistoryState(tableId: string, data:
   });
 
   // there might be a limit 100 times per 30 seconds
+  console.log(`setting "${tableId}" history state:`, actualState);
   window?.history?.replaceState(actualState, '');
 }, 300)
 
