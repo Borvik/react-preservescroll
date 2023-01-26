@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import './App.css';
 import {
   Switch,
@@ -13,6 +13,21 @@ import { Page1 } from './page1';
 function App() {
   const h = useHistory();
   const loc = useLocation<{preserveScrollDisabled?: boolean}>();
+  console.log('Current State:', loc.state);
+
+  const setPreserveDisabled = useCallback((disabled: boolean) => {
+    if (!loc.state) {
+      h.replace(loc, { preserveScrollDisabled: disabled });
+    } else {
+      h.replace({
+        ...loc,
+        state: {
+          ...loc.state,
+          preserveScrollDisabled: disabled,
+        }
+      });
+    }
+  }, [h, loc]);
   return (
     <div className="App">
       <nav>
@@ -20,8 +35,8 @@ function App() {
           <Route exact path="/">
             <li>
               {!!loc?.state?.preserveScrollDisabled
-                ? <a onClick={() => {h.replace(loc, {preserveScrollDisabled: false}); return false;}}>Enable</a>
-                : <a onClick={() => {h.replace(loc, {preserveScrollDisabled: true}); return false;}}>Disable</a>
+                ? <a onClick={() => {console.log('enabling scroll preservation'); setPreserveDisabled(false); return false;}}>Enable</a>
+                : <a onClick={() => {console.log('disabling scroll preservation'); setPreserveDisabled(true); return false;}}>Disable</a>
               }
             </li>
           </Route>

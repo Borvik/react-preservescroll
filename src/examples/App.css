@@ -27,6 +27,8 @@ nav > ul > li {
 
 nav a {
   color: #61dafb;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 #scroller {
