@@ -1,8 +1,13 @@
 import { useEffect } from 'react';
+import { ScrollPos } from './types';
+
+interface InstanceType {
+  [x: string]: ScrollPos
+}
 
 const HistoryFunctions = ['back', 'forward', 'go', 'pushState'] as const;
 type HistoryKeys = typeof HistoryFunctions[number];
-type HistoryCallbackFn = () => Promise<void>;
+type HistoryCallbackFn = () => InstanceType | void;
 
 type Map = {
   [Property in HistoryKeys]?: typeof window.history[Property]
@@ -10,15 +15,32 @@ type Map = {
 
 let HistoryCallbacks: HistoryCallbackFn[] = [];
 
+function runHistoryCallbacks() {
+  if (HistoryCallbacks.length) {
+    let result = HistoryCallbacks.reduce((acc, fn) => {
+      let fnResult = fn();
+      if (fnResult) {
+        acc = { ...acc, ...fnResult };
+      }
+      return acc;
+    }, {});
+  
+    if (Object.keys(result).length) {
+      let initialData = window?.history?.state ?? {};
+      if (typeof initialData !== 'object' || Array.isArray(initialData)) {
+        initialData = {};
+      }
+      initialData = {...initialData, scrollState: result };
+      window?.history?.replaceState(initialData, '');
+    }
+  }
+}
+
 function wrapFn<Params extends any[], R>(
-  historyFuntion: HistoryKeys,
   func: (...args: Params) => R
 ): (...args: Params) => Promise<R> {
   return async (...args: Params) => {
-    console.log(`Running history.${historyFuntion}():`, args);
-    let fnPromises = HistoryCallbacks.map(fn => fn());
-    await Promise.all(fnPromises);
-    console.log('Ran the before functions');
+    runHistoryCallbacks();
     return func.apply(history, args); // eslint-disable-line no-restricted-globals
   }
 }
@@ -29,15 +51,14 @@ if (window?.history) {
     // @ts-ignore
     OriginalHistoryFunctions[k] = window.history[k];
     // @ts-ignore
-    window.history[k] = wrapFn(k, OriginalHistoryFunctions[k])
+    window.history[k] = wrapFn(OriginalHistoryFunctions[k])
   }
 }
 
 export function useHistoryUnload(cb: HistoryCallbackFn) {
   useEffect(() => {
     function handleBeforeUnload(_evt: BeforeUnloadEvent) {
-      console.log('Running beforeunload');
-      cb();
+      runHistoryCallbacks();
     }
 
     if (window) {

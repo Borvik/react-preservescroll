@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { ScrollPos } from './types';
-import { useHistoryState } from './useHistoryState';
+import { getCurrentScrollState } from './getCurrentScrollState';
 import { useHistoryUnload } from './useHistoryUnload';
 
 interface PreserveScrollProps extends React.HTMLProps<HTMLDivElement> {
@@ -9,22 +9,23 @@ interface PreserveScrollProps extends React.HTMLProps<HTMLDivElement> {
 
 export const PreserveScroll: React.FC<PreserveScrollProps> = function PreserveScroll({ children, id, ...props }) {
   const divRef = useRef<HTMLDivElement>(null);
-  const [scrollState, setScrollState] = useHistoryState<ScrollPos>(id);
 
-  const unload = useCallback(async () => {
+  const unload = useCallback(() => {
     if (!divRef.current) {
-      console.log('?? returned ??');
       return;
     }
-    await setScrollState({
-      x: divRef.current.scrollLeft,
-      y: divRef.current.scrollTop
-    });
-  }, [setScrollState]);
+    return {
+      [divRef.current.id]: {
+        x: divRef.current.scrollLeft,
+        y: divRef.current.scrollTop
+      }
+    }
+  }, []);
   useHistoryUnload(unload);
 
   useEffect(() => {
     if (!divRef.current) return;
+    let scrollState = getCurrentScrollState<ScrollPos>(divRef.current.id);
     if (scrollState) {
       divRef.current.scrollTo(scrollState.x, scrollState.y);
     }
