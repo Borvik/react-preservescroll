@@ -1,0 +1,50 @@
+body {
+  background-color: black;
+}
+
+.App {
+  background-color: #282c34;
+  color: white;
+  min-height: 100vh;
+  font-size: calc(10px + 2vmin);
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
+  justify-items: stretch;
+}
+
+nav {
+  flex: 0 0 auto;
+}
+
+nav > ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  justify-content: center;
+}
+
+nav > ul > li {
+  margin: 0 20px;
+}
+
+nav a {
+  color: #61dafb;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.parent-scroller {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  justify-items: stretch;
+  max-width: 100vw;
+}
+
+.scroller {
+  flex: 1 1 0;
+  overflow-y: scroll;
+  max-height: 100%;
+}
