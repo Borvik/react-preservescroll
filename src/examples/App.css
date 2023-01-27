@@ -1,3 +1,7 @@
+body {
+  background-color: black;
+}
+
 .App {
   background-color: #282c34;
   color: white;
@@ -31,12 +35,16 @@ nav a {
   cursor: pointer;
 }
 
-#scroller {
+.parent-scroller {
   flex: 1 1 0;
-  overflow-y: scroll;
-  min-width: 0;
+  min-height: 0;
+  display: flex;
+  justify-items: stretch;
+  max-width: 100vw;
 }
 
-body {
-  background-color: black;
+.scroller {
+  flex: 1 1 0;
+  overflow-y: scroll;
+  max-height: 100%;
 }

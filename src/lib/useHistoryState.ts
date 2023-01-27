@@ -1,12 +1,12 @@
 import { useCallback } from 'react';
 import { update } from './immutable';
 
-// DOES NOT CAUSE RERENDERS
+// SHOULD NOT CAUSE RERENDERS
 
 function getCurrentStateObject(tableId: string) {
   const curPublicState = window?.history?.state ?? null;
   return (
-    typeof curPublicState === 'object' && !Array.isArray(curPublicState)
+    curPublicState && typeof curPublicState === 'object' && !Array.isArray(curPublicState)
   ) ? curPublicState[tableId] : null;
 }
 
@@ -19,28 +19,59 @@ function debounce<Params extends any[]>(func: (...args: Params) => void, timeout
     }, timeout);
   }
 }
-
-const setHistoryState = debounce(function setHistoryState(tableId: string, data: any) {
-  let actualState = window?.history?.state ?? {};
-  if (typeof actualState !== 'object' || Array.isArray(actualState)) {
-    actualState = {};
-  }
-
-  actualState = update(actualState, {
-    [tableId]: { $set: data }
-  });
-
+function finalReplaceState<T extends object>(data: T) {
+  console.log(`replacing history state:`, data);
   // there might be a limit 100 times per 30 seconds
-  console.log(`setting "${tableId}" history state:`, actualState);
-  window?.history?.replaceState(actualState, '');
-}, 300)
+  window?.history?.replaceState(data, '');
+  console.log(`  state replaced`);
+}
 
+type MergePromiseResolver = (value: void | PromiseLike<void>) => void
+function mergedDebounce(callback: <T extends object>(data: T) => void, timeout: number): <T extends object>(data: T) => Promise<void> {
+  let mergedData: any = null;
+  let promiseResolvers: MergePromiseResolver[] = [];
 
-export function useHistoryState<State>(tableId: string): [State | null | undefined, (newState: (Partial<State> | ((state: State) => Partial<State>))) => void] {
+  const debounced = debounce(() => {
+    console.log('debounce timeout complete');
+    callback(mergedData);
+    console.log('resolve promises');
+    for (let r of promiseResolvers) {
+      r();
+    }
+    console.log('reset merges');
+    mergedData = null;
+    promiseResolvers = [];
+  }, timeout);
+
+  return async <T extends object>(data: T) => {
+    let mergePromise = new Promise<void>((resolve) => { promiseResolvers.push(resolve) });
+    console.log('merge data');
+    if (mergedData === null) {
+      mergedData = window?.history?.state ?? {};
+      if (typeof mergedData !== 'object' || Array.isArray(mergedData)) {
+        mergedData = {};
+      }
+    }
+    mergedData = { ...mergedData, ...data };
+    console.log('merged data:', mergedData);
+    debounced();
+    console.log('waiting...');
+    await mergePromise;
+    console.log('done');
+  };
+}
+
+const replaceState = mergedDebounce(finalReplaceState, 300);
+
+async function setHistoryState<T extends object>(instanceId: string, data: T) {
+  await replaceState({ [instanceId]: data });
+}
+
+export function useHistoryState<State>(tableId: string): [State | null | undefined, (newState: (Partial<State> | ((state: State) => Partial<State>))) => Promise<void>] {
   const curPublicState = getCurrentStateObject(tableId);
 
   const updater = useCallback(
-    (newState: (Partial<State> | ((state: State) => Partial<State>))) => {
+    async (newState: (Partial<State> | ((state: State) => Partial<State>))) => {
       const currentState = getCurrentStateObject(tableId);
       const publicState = typeof newState === 'function'
         ? (newState as any)(currentState)
@@ -50,7 +81,8 @@ export function useHistoryState<State>(tableId: string): [State | null | undefin
         ...(currentState ?? {}),
         ...publicState
       };
-      setHistoryState(tableId, fullNewState);
+      console.log('calling table set history', { tableId: fullNewState });
+      await setHistoryState(tableId, fullNewState);
     }
   , [tableId]);
 
