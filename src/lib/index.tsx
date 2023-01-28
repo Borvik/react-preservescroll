@@ -1,14 +1,15 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { ForwardedRef, useCallback, useEffect, useRef } from 'react';
 import { ScrollPos } from './types';
 import { getCurrentScrollState } from './getCurrentScrollState';
 import { useHistoryUnload } from './useHistoryUnload';
 
 interface PreserveScrollProps extends React.HTMLProps<HTMLDivElement> {
   id: string
+  children?: React.ReactNode
 }
 
-export const PreserveScroll: React.FC<PreserveScrollProps> = function PreserveScroll({ children, id, ...props }) {
-  const divRef = useRef<HTMLDivElement>(null);
+export const PreserveScroll = React.forwardRef(({ children, id, ...props }: PreserveScrollProps, ref: ForwardedRef<HTMLDivElement>) => {
+  const divRef = useRef<HTMLDivElement | null>(null);
 
   const unload = useCallback(() => {
     if (!divRef.current) {
@@ -31,5 +32,13 @@ export const PreserveScroll: React.FC<PreserveScrollProps> = function PreserveSc
     }
   }, []);
 
-  return <div ref={divRef} id={id} {...props}>{children}</div>
-}
+  return <div ref={(e) => {
+    divRef.current = e;
+    if (typeof ref === 'function') {
+      ref(e);
+    } else if (ref) {
+      ref.current = e;
+    }
+  }} id={id} {...props}>{children}</div>
+});
+PreserveScroll.displayName = 'PreserveScroll';
