@@ -46,7 +46,7 @@ function wrapFn<Params extends any[], R>(
 }
 
 const OriginalHistoryFunctions: Map = {};
-if (window?.history) {
+if (typeof window !== 'undefined' && window.history) {
   for (let k of HistoryFunctions) {
     // @ts-ignore
     OriginalHistoryFunctions[k] = window.history[k];
@@ -61,13 +61,13 @@ export function useHistoryUnload(cb: HistoryCallbackFn) {
       runHistoryCallbacks();
     }
 
-    if (window) {
+    if (typeof window !== 'undefined') {
       window.addEventListener('beforeunload', handleBeforeUnload)
       HistoryCallbacks.push(cb);
     }
 
     return () => {
-      if (window) {
+      if (typeof window !== 'undefined') {
         window.removeEventListener('beforeunload', handleBeforeUnload);
         HistoryCallbacks = HistoryCallbacks.filter(c => c !== cb);
       }

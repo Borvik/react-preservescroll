@@ -1,5 +1,5 @@
 export function getCurrentScrollState<State>(instanceId: string) {
-  const curPublicState = window?.history?.state ?? null;
+  const curPublicState = typeof window !== 'undefined' ? window.history?.state ?? null : null;
   return (
     curPublicState &&
     typeof curPublicState === 'object' &&
