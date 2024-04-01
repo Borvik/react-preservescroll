@@ -1,5 +1,12 @@
 # Change Log - @borvik/react-preservescroll
 
+## 1.0.3
+Mon, 01 Apr 2024
+
+### Updates
+
+- Updated peerDependencies
+
 ## 1.0.2
 Tues, 31 Jan 2023
 

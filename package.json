@@ -1,6 +1,6 @@
 {
   "name": "@borvik/react-preservescroll",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "dependencies": {
@@ -24,8 +24,7 @@
     "web-vitals": "^2.1.4"
   },
   "peerDependencies": {
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1"
+    "react": ">=16.13.1"
   },
   "scripts": {
     "start": "react-scripts start",
